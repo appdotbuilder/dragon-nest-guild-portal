@@ -1,17 +1,24 @@
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type CreateUserInput, type User } from '../schema';
 
 export const createUser = async (input: CreateUserInput): Promise<User> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new user from Discord OAuth data
-    // and persisting it in the database with default 'recruit' role.
-    return Promise.resolve({
-        id: 0,
+  try {
+    // Insert user record
+    const result = await db.insert(usersTable)
+      .values({
         discord_id: input.discord_id,
         discord_username: input.discord_username,
         discord_avatar: input.discord_avatar,
         guild_role: input.guild_role || 'recruit',
-        treasury_status: 'pending',
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
+        treasury_status: 'pending' // Default treasury status
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('User creation failed:', error);
+    throw error;
+  }
 };

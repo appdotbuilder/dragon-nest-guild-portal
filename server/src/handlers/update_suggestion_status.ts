@@ -1,18 +1,33 @@
+import { db } from '../db';
+import { suggestionsTable } from '../db/schema';
 import { type UpdateSuggestionStatusInput, type Suggestion } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const updateSuggestionStatus = async (input: UpdateSuggestionStatusInput): Promise<Suggestion> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is allowing Guild Master to update suggestion status
-    // (pending/approved/rejected/implemented) based on review and implementation.
-    return Promise.resolve({
-        id: input.suggestion_id,
-        title: 'placeholder',
-        description: 'placeholder',
+  try {
+    // Update the suggestion status and updated_at timestamp
+    const result = await db.update(suggestionsTable)
+      .set({
         status: input.status,
-        upvotes: 0,
-        downvotes: 0,
-        created_by: 0,
-        created_at: new Date(),
         updated_at: new Date()
-    } as Suggestion);
+      })
+      .where(eq(suggestionsTable.id, input.suggestion_id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Suggestion with id ${input.suggestion_id} not found`);
+    }
+
+    // Return the updated suggestion
+    const suggestion = result[0];
+    return {
+      ...suggestion,
+      created_at: suggestion.created_at,
+      updated_at: suggestion.updated_at
+    };
+  } catch (error) {
+    console.error('Suggestion status update failed:', error);
+    throw error;
+  }
 };

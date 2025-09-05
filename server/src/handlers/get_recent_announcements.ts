@@ -1,8 +1,21 @@
+import { db } from '../db';
+import { announcementsTable } from '../db/schema';
 import { type Announcement } from '../schema';
+import { desc } from 'drizzle-orm';
 
 export const getRecentAnnouncements = async (): Promise<Announcement[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching recent announcements for dashboard
-    // and announcements page, ordered by creation date.
-    return Promise.resolve([]);
+  try {
+    // Fetch announcements ordered by creation date (most recent first)
+    // Limit to 10 recent announcements for dashboard/general use
+    const results = await db.select()
+      .from(announcementsTable)
+      .orderBy(desc(announcementsTable.created_at))
+      .limit(10)
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch recent announcements:', error);
+    throw error;
+  }
 };

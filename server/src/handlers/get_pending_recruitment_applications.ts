@@ -1,8 +1,19 @@
+import { db } from '../db';
+import { recruitmentApplicationsTable } from '../db/schema';
 import { type RecruitmentApplication } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const getPendingRecruitmentApplications = async (): Promise<RecruitmentApplication[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all pending recruitment applications
-    // for officers (GM/VGM/SGM) to review and approve/reject.
-    return Promise.resolve([]);
+  try {
+    // Fetch all pending recruitment applications
+    const results = await db.select()
+      .from(recruitmentApplicationsTable)
+      .where(eq(recruitmentApplicationsTable.status, 'pending'))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch pending recruitment applications:', error);
+    throw error;
+  }
 };

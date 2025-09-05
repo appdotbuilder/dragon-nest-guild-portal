@@ -1,18 +1,34 @@
+import { db } from '../db';
+import { guidesTable, usersTable } from '../db/schema';
 import { type CreateGuideInput, type Guide } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const createGuide = async (input: CreateGuideInput): Promise<Guide> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating guides by members
-    // that require approval from VGM+ before becoming publicly visible.
-    return Promise.resolve({
-        id: 0,
+  try {
+    // Verify that the user exists
+    const user = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, input.created_by))
+      .execute();
+
+    if (user.length === 0) {
+      throw new Error(`User with id ${input.created_by} does not exist`);
+    }
+
+    // Insert the guide record
+    const result = await db.insert(guidesTable)
+      .values({
         title: input.title,
         content: input.content,
-        status: 'pending',
         created_by: input.created_by,
-        approved_by: null,
-        approved_at: null,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Guide);
+        status: 'pending'
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Guide creation failed:', error);
+    throw error;
+  }
 };
